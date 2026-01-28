@@ -1,5 +1,5 @@
-name: Build OpenAleph UI
-run-name: Build OpenAleph UI ${{ inputs.tag }} (${{ inputs.arch }})
+name: Build Multi-Arch OpenAleph
+run-name: Build OpenAleph ${{ inputs.tag }} (${{ inputs.arch }})
 
 on:
   workflow_dispatch:
@@ -30,27 +30,12 @@ on:
         default: stg-common
 
 jobs:
-  build-ui-base:
+  build-and-push:
     uses: lemonde/workflows-gha/.github/workflows/docker-build-push-aws.yaml@v1
     with:
       branch: ${{ inputs.branch }}
-      dockerfile: ui/Dockerfile
-      image_tag: openaleph-ui-base:${{ inputs.tag }}
+      dockerfile: Dockerfile
+      image_tag: openaleph:${{ inputs.tag }}
       environment: ${{ inputs.environment }}
       arch: ${{ inputs.arch }}
-      build_args: |
-        ALEPH_TAG=${{ inputs.tag }}
-    secrets: inherit
-
-  build-ui:
-    needs: build-ui-base
-    uses: lemonde/workflows-gha/.github/workflows/docker-build-push-aws.yaml@v1
-    with:
-      branch: ${{ inputs.branch }}
-      dockerfile: ui/Dockerfile.production
-      image_tag: openaleph-ui:${{ inputs.tag }}
-      environment: ${{ inputs.environment }}
-      arch: ${{ inputs.arch }}
-      build_args: |
-        ALEPH_TAG=${{ inputs.tag }}
     secrets: inherit
