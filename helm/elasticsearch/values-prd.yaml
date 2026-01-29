@@ -1,0 +1,70 @@
+# OpenAleph Elasticsearch - Production Values
+# Multi-node cluster for production
+
+# ECK Operator - disabled for PRD (using cluster-wide ECK operator)
+eck-operator:
+  enabled: false
+
+elasticsearch:
+  name: prd-openaleph
+  namespace: prd-openaleph-elasticsearch
+
+  # Enable ECK management for multi-node cluster
+  eckManaged: "true"
+
+  # Elasticsearch 9.x for OpenAleph 5.x
+  version: "9.0.0"
+
+  updateStrategy:
+    changeBudget:
+      maxUnavailable: 1
+
+  nodeSets:
+    # Master nodes - 3 for HA in production
+    master:
+      count: 3
+      config:
+        node.roles: ["master"]
+        cluster.routing.allocation.disk.watermark.low: "85%"
+        cluster.routing.allocation.disk.watermark.high: "90%"
+        cluster.routing.allocation.disk.watermark.flood_stage: "95%"
+        # Allow reindex from old Aleph if needed
+        # reindex.remote.whitelist: ["old-aleph-es:9200"]
+      resources:
+        requests:
+          cpu: "2"
+          memory: "8Gi"
+        limits:
+          cpu: "4"
+          memory: "8Gi"
+      storage:
+        size: 50Gi
+        storageClassName: gp3
+
+    # Data nodes - 5 for production capacity
+    data:
+      count: 5
+      config:
+        node.roles: ["data", "ingest"]
+        cluster.routing.allocation.disk.watermark.low: "85%"
+        cluster.routing.allocation.disk.watermark.high: "90%"
+        cluster.routing.allocation.disk.watermark.flood_stage: "95%"
+        # Allow reindex from old Aleph if needed
+        # reindex.remote.whitelist: ["old-aleph-es:9200"]
+      resources:
+        requests:
+          cpu: "2"
+          memory: "16Gi"
+        limits:
+          cpu: "4"
+          memory: "16Gi"
+      storage:
+        size: 1Ti
+        storageClassName: gp3
+
+  # Required plugin for OpenAleph
+  plugins:
+    - analysis-icu
+
+  # Synonyms ConfigMap (optional - create if needed)
+  synonymsConfigMap: ""

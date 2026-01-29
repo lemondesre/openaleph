@@ -1,0 +1,66 @@
+# OpenAleph Elasticsearch - Staging Values
+# Multi-node cluster for staging testing
+
+# ECK Operator - disabled for STG (using cluster-wide ECK operator)
+eck-operator:
+  enabled: false
+
+elasticsearch:
+  name: stg-openaleph
+  namespace: stg-openaleph-elasticsearch
+
+  # Enable ECK management for multi-node cluster
+  eckManaged: "true"
+
+  # Elasticsearch 9.x for OpenAleph 5.x
+  version: "9.0.0"
+
+  updateStrategy:
+    changeBudget:
+      maxUnavailable: 1
+
+  nodeSets:
+    # Master nodes - 2 for staging
+    master:
+      count: 2
+      config:
+        node.roles: ["master"]
+        cluster.routing.allocation.disk.watermark.low: "85%"
+        cluster.routing.allocation.disk.watermark.high: "90%"
+        cluster.routing.allocation.disk.watermark.flood_stage: "95%"
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "2Gi"
+        limits:
+          cpu: "500m"
+          memory: "2Gi"
+      storage:
+        size: 10Gi
+        storageClassName: gp3
+
+    # Data nodes - 1 for staging (reduced for stability)
+    data:
+      count: 1
+      config:
+        node.roles: ["data", "ingest"]
+        cluster.routing.allocation.disk.watermark.low: "85%"
+        cluster.routing.allocation.disk.watermark.high: "90%"
+        cluster.routing.allocation.disk.watermark.flood_stage: "95%"
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "2Gi"
+        limits:
+          cpu: "500m"
+          memory: "2Gi"
+      storage:
+        size: 30Gi
+        storageClassName: gp3
+
+  # Required plugin for OpenAleph
+  plugins:
+    - analysis-icu
+
+  # Synonyms ConfigMap (optional - create if needed)
+  synonymsConfigMap: ""
